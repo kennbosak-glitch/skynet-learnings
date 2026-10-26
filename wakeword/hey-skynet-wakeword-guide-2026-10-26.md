@@ -38,6 +38,17 @@ Negatives, three sources, in increasing order of value:
 - **Near-miss speech**: the user reading/speaking things that are *not* the phrase (ours included a dedicated read-aloud negative set). This is what teaches the boundary instead of the topic.
 - **Mined hard negatives** — the highest-value data you will ever feed this model: once v1 runs live, log every false trigger, slice those exact windows out of your recordings, and retrain with them labeled negative. Our hard-negative sets (1,816 + 953 rows across two mining rounds) did more for precision than any other single change. We shipped four classifier generations (v1→v4); every generation after the first exists because of mined failures.
 
+**Augmentation (applied at dataset build, per clip)** — this is the part everyone asks about, so here it is exactly as our builder does it:
+
+- **Speed warp** 0.94–1.06×.
+- **Gain variation** across clips.
+- **Noise-bed mixing**: each phrase is laid over a pink-noise bed at **SNR ≈ 6–20 dB** for near-field clips and **≈ 5–12 dB** for the far-field variant.
+- **Far-field simulation**: the far variant additionally band-limits the clip (Butterworth filtering) to mimic distance and cheap-mic roll-off.
+- **TTS variation at synthesis time**: Piper's `noise_scale` randomized 0.3–0.9 and `noise_w_scale` 0.5–1.0 per clip, so no two synthetic positives share a voice texture.
+- **No impulse-response / reverb convolution.** We never simulated rooms. The room came from *real* recordings made in the room, on the target device — which leads to the honest headline of this whole section:
+
+**Augmentation got our head to offline-perfect. It did not get it to live-mic robust.** Synthetic + augmented training passed every offline test we built and still missed on the live microphone. What closed the gap, in order: (1) real positives recorded on the actual device, in the actual room, at actual distances; (2) hard negatives mined from the live system's own false triggers and retrained in; (3) four shipped generations of the head, each one a response to a measured live failure. If your head passes offline and fails live, your missing ingredient is almost certainly real on-device data, not more augmentation.
+
 ## Runtime settings that survived
 
 - **Threshold 0.80** on the classifier score, with a **5-frame sustain**: the score must stay over threshold across 5 consecutive frames before a trigger fires. Single-frame noise, door slams, and TV consonants die against the sustain rule; the threshold alone won't save you.

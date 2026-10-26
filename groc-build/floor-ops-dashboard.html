@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Floor Ops</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141b17'/%3E%3Crect x='7' y='8' width='18' height='3' rx='1.5' fill='%23f3efe4'/%3E%3Crect x='7' y='14.5' width='12' height='3' rx='1.5' fill='%231f8a52'/%3E%3Crect x='7' y='21' width='8' height='3' rx='1.5' fill='%23c4a15a'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --floor: #141b17;
+      --floor-2: #1c2620;
+      --line: #2d3c33;
+      --cream: #f4f0e6;
+      --cream-2: #e7e0d0;
+      --paper: #f7f3ea;
+      --ink: #1b2420;
+      --muted: #5e6d64;
+      --faint: #8b978f;
+      --brass: #c4a15a;
+      --ok: #1f8a52;
+      --ok-ink: #0d6b3d;
+      --ok-bg: #e5f5ec;
+      --ok-line: #b7e0c8;
+      --watch: #c8882a;
+      --watch-ink: #7a4e0d;
+      --watch-bg: #fbf3df;
+      --watch-line: #ead7a4;
+      --blocked: #c84b3a;
+      --blocked-ink: #8f2d22;
+      --blocked-bg: #fdecea;
+      --blocked-line: #f0c2bb;
+      --hot: #ffb0a4;
+      --sans: "Avenir Next", "Segoe UI", "Gill Sans", "Trebuchet MS", sans-serif;
+      --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      --radius: 16px;
+      --shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 12px 28px rgba(0, 0, 0, 0.28);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html { height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      background:
+        radial-gradient(900px 420px at 100% -10%, rgba(196, 161, 90, 0.12), transparent 55%),
+        var(--floor);
+      color: var(--cream);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    button, textarea { font: inherit; }
+
+    button { cursor: pointer; }
+
+    .wrap {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding:
+        max(16px, env(safe-area-inset-top))
+        max(16px, env(safe-area-inset-right))
+        max(28px, env(safe-area-inset-bottom))
+        max(16px, env(safe-area-inset-left));
+    }
+
+    .mast {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--brass);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 8vw, 44px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+
+    .lede, .source {
+      margin: 6px 0 0;
+      color: var(--faint);
+      max-width: 38rem;
+    }
+
+    .source { color: var(--cream-2); font-size: 14px; }
+
+    .mast-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .btn {
+      flex: 1 1 140px;
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-weight: 650;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .btn:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--brass);
+      outline-offset: 2px;
+    }
+
+    .btn-primary { background: var(--cream); color: var(--ink); }
+    .btn-primary:hover { background: #fffaf0; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--cream);
+      border-color: #3d5146;
+    }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.05); }
+    .btn:active { transform: translateY(1px); }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 16px 0 0;
+    }
+
+    .stat {
+      min-width: 0;
+      padding: 12px;
+      background: var(--floor-2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .stat .k {
+      margin: 0;
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .stat .v {
+      margin: 4px 0 0;
+      font-family: var(--mono);
+      font-size: clamp(22px, 6vw, 34px);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .stat.is-hot .v { color: var(--hot); }
+
+    .panel {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 4px;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .panel p { margin: 0 0 12px; color: var(--muted); }
+
+    .panel label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 180px;
+      margin: 0 0 12px;
+      padding: 12px;
+      resize: vertical;
+      border-radius: 12px;
+      border: 1px solid #d5cdb8;
+      background: #fffdf8;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .panel-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .panel .btn-primary { background: var(--ink); color: var(--cream); }
+    .panel .btn-primary:hover { background: #24302a; }
+    .panel .btn-ghost { color: var(--ink); border-color: #d0c8b8; }
+    .panel .btn-ghost:hover { background: rgba(27, 36, 32, 0.05); }
+
+    .error {
+      margin: 0 0 12px;
+      color: var(--blocked-ink);
+      font-weight: 650;
+    }
+
+    .notice {
+      margin: 14px 0 0;
+      min-height: 1.2em;
+      color: var(--cream-2);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .card {
+      position: relative;
+      min-width: 0;
+      padding: 14px 14px 14px 18px;
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: var(--rail, var(--ok));
+    }
+
+    .card.ok { --rail: var(--ok); }
+    .card.watch { --rail: var(--watch); }
+    .card.blocked { --rail: var(--blocked); }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      overflow-wrap: anywhere;
+    }
+
+    .chip {
+      flex: 0 0 auto;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .chip.ok { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-line); }
+    .chip.watch { background: var(--watch-bg); color: var(--watch-ink); border-color: var(--watch-line); }
+    .chip.blocked { background: var(--blocked-bg); color: var(--blocked-ink); border-color: var(--blocked-line); }
+
+    .countline {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin: 12px 0 10px;
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countline .count { font-size: 28px; line-height: 1; letter-spacing: -0.03em; }
+    .countline .cap, .countline .unit { color: var(--muted); font-size: 14px; }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #e6dfd0;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: var(--ok);
+    }
+
+    .card.watch .bar-fill { background: var(--watch); }
+    .card.blocked .bar-fill { background: var(--blocked); }
+
+    .card-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-foot span { overflow-wrap: anywhere; min-width: 0; }
+
+    .over { color: var(--blocked-ink); font-weight: 700; }
+
+    .empty {
+      padding: 28px 16px;
+      text-align: center;
+      background: var(--floor-2);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+    }
+
+    .empty h2 { margin: 0 0 6px; font-size: 20px; }
+    .empty p { margin: 0; color: var(--faint); }
+
+    @media (min-width: 720px) {
+      .mast-actions { width: auto; }
+      .mast-actions .btn { flex: 0 0 auto; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (min-width: 1040px) {
+      .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bar-fill, .btn { transition: none; }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .bar-fill { transition: width 200ms ease; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="mast">
+      <div>
+        <p class="eyebrow">Read only · shift board</p>
+        <h1>Floor Ops</h1>
+        <p class="lede">Station capacity at a glance. Paste a JSON array to replace the sample board.</p>
+        <p class="source" id="source">Sample board</p>
+      </div>
+      <div class="mast-actions">
+        <button type="button" class="btn btn-primary" id="import-toggle" aria-expanded="false" aria-controls="import-panel">Import JSON</button>
+        <button type="button" class="btn btn-ghost" id="reset">Sample data</button>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Board summary">
+      <article class="stat">
+        <p class="k">Stations</p>
+        <p class="v" id="sum-items">0</p>
+      </article>
+      <article class="stat">
+        <p class="k">Units</p>
+        <p class="v" id="sum-count">0</p>
+      </article>
+      <article class="stat" id="blocked-stat">
+        <p class="k">Blocked</p>
+        <p class="v" id="sum-blocked">0</p>
+      </article>
+    </section>
+
+    <section class="panel" id="import-panel" hidden>
+      <h2>Import a board</h2>
+      <p>An array of objects with id, name, status (ok, watch, or blocked), count, and cap.</p>
+      <label for="json-input">JSON array</label>
+      <textarea id="json-input" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder='[
+  {"id":"dock-1","name":"Dock 1","status":"ok","count":12,"cap":20}
+]'></textarea>
+      <p class="error" id="import-error" role="alert"></p>
+      <div class="panel-actions">
+        <button type="button" class="btn btn-primary" id="apply">Apply board</button>
+        <button type="button" class="btn btn-ghost" id="cancel">Cancel</button>
+      </div>
+    </section>
+
+    <p class="notice" id="notice" role="status"></p>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <script>
+    (function () {
+      var SAMPLE = [
+        { id: "lane-a", name: "Inbound lane A", status: "ok", count: 42, cap: 60 },
+        { id: "lane-b", name: "Inbound lane B", status: "watch", count: 54, cap: 60 },
+        { id: "pack-1", name: "Pack cell 1", status: "ok", count: 18, cap: 24 },
+        { id: "pack-2", name: "Pack cell 2", status: "blocked", count: 24, cap: 24 },
+        { id: "dock-3", name: "Outbound dock 3", status: "watch", count: 11, cap: 16 },
+        { id: "cold", name: "Cold store", status: "ok", count: 310, cap: 400 },
+        { id: "qa", name: "QA hold", status: "blocked", count: 7, cap: 12 },
+        { id: "returns", name: "Returns bay", status: "ok", count: 5, cap: 20 }
+      ];
+
+      var STATUS = {
+        ok: "OK",
+        watch: "Watch",
+        blocked: "Blocked"
+      };
+
+      var state = {
+        items: SAMPLE.map(clone),
+        source: "sample",
+        notice: ""
+      };
+
+      var grid = document.getElementById("grid");
+      var sumItems = document.getElementById("sum-items");
+      var sumCount = document.getElementById("sum-count");
+      var sumBlocked = document.getElementById("sum-blocked");
+      var blockedStat = document.getElementById("blocked-stat");
+      var sourceEl = document.getElementById("source");
+      var noticeEl = document.getElementById("notice");
+      var panel = document.getElementById("import-panel");
+      var toggle = document.getElementById("import-toggle");
+      var input = document.getElementById("json-input");
+      var errorEl = document.getElementById("import-error");
+
+      function clone(item) {
+        return {
+          id: item.id,
+          name: item.name,
+          status: item.status,
+          count: item.count,
+          cap: item.cap
+        };
+      }
+
+      function formatNum(n) {
+        if (Number.isInteger(n)) return n.toLocaleString("en-US");
+        return n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+      }
+
+      function setOpen(open) {
+        panel.hidden = !open;
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) input.focus();
+      }
+
+      function parseBoard(text) {
+        var data;
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          return { error: "That text is not valid JSON." };
+        }
+        if (!Array.isArray(data)) {
+          return { error: "The JSON must be an array of station objects." };
+        }
+        var items = [];
+        for (var i = 0; i < data.length; i++) {
+          var row = data[i];
+          var label = "Item " + (i + 1);
+          if (!row || typeof row !== "object" || Array.isArray(row)) {
+            return { error: label + " must be an object." };
+          }
+          if (typeof row.id !== "string" && typeof row.id !== "number") {
+            return { error: label + " needs an id." };
+          }
+          if (typeof row.name !== "string" || row.name.trim() === "") {
+            return { error: label + " needs a name." };
+          }
+          var status = String(row.status == null ? "" : row.status).toLowerCase();
+          if (!STATUS[status]) {
+            return { error: label + " status must be ok, watch, or blocked." };
+          }
+          if (typeof row.count !== "number" || !isFinite(row.count) || row.count < 0) {
+            return { error: label + " count must be a number zero or greater." };
+          }
+          if (typeof row.cap !== "number" || !isFinite(row.cap) || row.cap < 0) {
+            return { error: label + " cap must be a number zero or greater." };
+          }
+          items.push({
+            id: String(row.id),
+            name: row.name.trim(),
+            status: status,
+            count: row.count,
+            cap: row.cap
+          });
+        }
+        return { items: items };
+      }
+
+      function render() {
+        var items = state.items;
+        var total = 0;
+        var blocked = 0;
+        for (var i = 0; i < items.length; i++) {
+          total += items[i].count;
+          if (items[i].status === "blocked") blocked += 1;
+        }
+        sumItems.textContent = formatNum(items.length);
+        sumCount.textContent = formatNum(total);
+        sumBlocked.textContent = formatNum(blocked);
+        blockedStat.classList.toggle("is-hot", blocked > 0);
+        sourceEl.textContent = state.source === "sample"
+          ? "Sample board"
+          : "Imported board · " + items.length + (items.length === 1 ? " station" : " stations");
+        noticeEl.textContent = state.notice;
+
+        grid.replaceChildren();
+        if (items.length === 0) {
+          var empty = document.createElement("div");
+          empty.className = "empty";
+          var title = document.createElement("h2");
+          title.textContent = "No stations";
+          var copy = document.createElement("p");
+          copy.textContent = "This board is empty. Import a JSON array or load the sample data.";
+          empty.append(title, copy);
+          grid.append(empty);
+          return;
+        }
+
+        var frag = document.createDocumentFragment();
+        for (var n = 0; n < items.length; n++) {
+          frag.append(renderCard(items[n]));
+        }
+        grid.append(frag);
+      }
+
+      function renderCard(item) {
+        var card = document.createElement("article");
+        card.className = "card " + item.status;
+
+        var top = document.createElement("div");
+        top.className = "card-top";
+        var name = document.createElement("h2");
+        name.textContent = item.name;
+        var chip = document.createElement("span");
+        chip.className = "chip " + item.status;
+        chip.textContent = STATUS[item.status];
+        top.append(name, chip);
+
+        var countline = document.createElement("p");
+        countline.className = "countline";
+        var count = document.createElement("span");
+        count.className = "count";
+        count.textContent = formatNum(item.count);
+        var slash = document.createElement("span");
+        slash.className = "cap";
+        slash.textContent = "/";
+        var cap = document.createElement("span");
+        cap.className = "cap";
+        cap.textContent = formatNum(item.cap);
+        var unit = document.createElement("span");
+        unit.className = "unit";
+        unit.textContent = "units";
+        countline.append(count, slash, cap, unit);
+
+        var pct = item.cap > 0 ? (item.count / item.cap) * 100 : 0;
+        var width = Math.max(0, Math.min(100, pct));
+        var bar = document.createElement("div");
+        bar.className = "bar";
+        bar.setAttribute("role", "progressbar");
+        bar.setAttribute("aria-valuemin", "0");
+        bar.setAttribute("aria-valuemax", String(item.cap));
+        bar.setAttribute("aria-valuenow", String(item.count));
+        bar.setAttribute("aria-label", item.name + " capacity");
+        var fill = document.createElement("span");
+        fill.className = "bar-fill";
+        fill.style.width = width + "%";
+        bar.append(fill);
+
+        var foot = document.createElement("div");
+        foot.className = "card-foot";
+        var id = document.createElement("span");
+        id.textContent = item.id;
+        var pctEl = document.createElement("span");
+        if (item.cap <= 0) {
+          pctEl.textContent = "no cap";
+        } else {
+          pctEl.textContent = Math.round(pct) + "%";
+          if (item.count > item.cap) pctEl.className = "over";
+        }
+        foot.append(id, pctEl);
+
+        card.append(top, countline, bar, foot);
+        return card;
+      }
+
+      toggle.addEventListener("click", function () {
+        setOpen(panel.hidden);
+      });
+
+      document.getElementById("cancel").addEventListener("click", function () {
+        errorEl.textContent = "";
+        setOpen(false);
+      });
+
+      document.getElementById("reset").addEventListener("click", function () {
+        state.items = SAMPLE.map(clone);
+        state.source = "sample";
+        state.notice = "Sample board restored.";
+        errorEl.textContent = "";
+        render();
+      });
+
+      document.getElementById("apply").addEventListener("click", function () {
+        var result = parseBoard(input.value);
+        if (result.error) {
+          errorEl.textContent = result.error;
+          return;
+        }
+        state.items = result.items;
+        state.source = "import";
+        state.notice = result.items.length === 0
+          ? "Loaded an empty board."
+          : "Loaded " + result.items.length + (result.items.length === 1 ? " station." : " stations.");
+        errorEl.textContent = "";
+        setOpen(false);
+        render();
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !panel.hidden) {
+          errorEl.textContent = "";
+          setOpen(false);
+        }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

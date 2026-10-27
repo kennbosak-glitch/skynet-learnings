@@ -170,22 +170,33 @@ true bottom edge now lands on floor support in all 92 columns. Viewed at 3×: pa
 upright (large over small), knob at mid-height beside the skeleton, stepped top edge
 rising toward the back corner, bottom edge seated on the wall/floor seam.
 
-### v10: the open item (the builder's second note on v8)
+### v10: the fireplace and the bar (the builder's first note on v8)
 
-Joe's full critique on v8 had two items; the door was the second. The first, still
-open as of this writing:
+Joe's full critique on v8 had two items; the door was the second. The first:
 
 > "There is also a problem with the fireplace and the bar. It is the far left bottom
 > corner of the fire place that needs to line up with the floor and wall line, and
 > the far left bottom corner of the bar as well."
 
 Both are anchor-rule defects at exactly the corner the rule names — the bottom-left
-corner where item, floor, and wall meet. The fireplace currently stands at (140,299)
-with 44 of 92 base columns wall-supported against the left wall; the bar at (330,291)
-with 40 of 260 wall-supported at its left end. "Supported" passed my gates; "lined up
-with the floor and wall line" is the stricter claim the builder is making, and it's
-the version now in progress. When it lands, this section gets its numbers like the
-others. Receipts or it didn't happen — including the unfinished ones.
+corner where item, floor, and wall meet. Measured against the room art, per column:
+the drawn floor/wall seam's outline stroke fits y = −0.5005x + 433.37, and both
+corners hung over the *wall* side of it with a visible wedge of teal wall beneath.
+The fireplace's far-left bottom corner sat **31.3 px above** the seam at its x; the
+bar's sat **24.3 px above**. Both had passed every gate I had — "supported" (the
+fireplace had 44 of 92 base columns wall-supported, the bar 40 of 260) is a weaker
+claim than "lined up," and my gates had never tested the stricter one. That gap is
+the lesson of this version: a gate suite only proves the claims it names.
+
+Fix: each item slid straight out of the wall along the floor's E axis — fireplace
+(140,299) → (173,314), bar (330,291) → (355,302) — preserving its position along the
+wall. A pure vertical drop was tested and rejected: it pulls the bar's counter out
+from under two surface items (their base points land on transparent sprite). After:
+fireplace corner residual **−0.2 px** to the seam line, bar **+1.2 px** — both
+inside the seam's outline stroke. Layout diff vs v9 = exactly 2 entries; official
+render diff confined to the two moved items' footprints; full gate suite zero
+build-wide; the fireplace's wall-supported base columns fell 85 → 0. v10 is in the
+builder's hands; his verdict is the remaining gate.
 
 ## The gates that emerged
 
@@ -296,9 +307,9 @@ for the guide.
   mint gate stays human for a reason.
 - **Two early versions are unrecoverable.** No layout or render of v1 or v2 survives
   in any record. The narrated build video says so on screen rather than faking them.
-- **Approval is still pending.** As of writing: v9 is in the builder's hands, v10 is
-  in progress, the funding he offered to send had not landed on-chain, and nothing —
-  per the gate — has minted.
+- **Approval is still pending.** As of writing: v10 is in the builder's hands as the
+  version to judge, the funding he offered to send had not landed on-chain, and
+  nothing — per the gate — has minted.
 
 ## The receipts
 

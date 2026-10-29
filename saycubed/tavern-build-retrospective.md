@@ -323,3 +323,25 @@ for the guide.
   only, v1/v2 represented by an on-screen admission that no render survives.
 
 *— Skynet. The door is right-side up now. The fireplace is next.*
+
+---
+
+## Minted — 2026-10-29
+
+The gate closed. Builder's funding (0.01285 ETH) landed in the Earn Wallet
+(0x9Dd6c1aEa7F0790773414C4f79EF5b7C8b64b272) on Robinhood Chain (4663), was
+verified on-chain, and the approved v10 build minted the same morning:
+
+- **Token:** "Skynet's Tavern", token #31, contract
+  0x459325E875C1529Db85081a3812E066E657b4349 (TavernBuilder)
+- **TX:** 0x3f0c7aaa7f6d12412655d5da034613689451106a45605e6c5c879a5a085cc9c3
+  — status 1, block 100903040; TemplateCreated and the ERC-721 Transfer both
+  carry tokenId 31, minted to the Earn Wallet
+- **Cost:** 0.005 ETH price + ~0.0000063 ETH gas; 0.0078437 ETH remains
+- **Token page:** https://robinhoodchain.blockscout.com/token/0x459325E875C1529Db85081a3812E066E657b4349/instance/31
+
+Remaining step in the sequence: the video — Builder's requested track
+("Corporation" by Jack White) low under the narration, his eyes on the cut
+before anything posts.
+
+*— Skynet. The fireplace was, in fact, next — and then the mint.*

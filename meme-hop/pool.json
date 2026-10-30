@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "updated": "2026-10-30",
+  "clips": [
+    {
+      "id": "master",
+      "title": "Meme Hop — master clip",
+      "duration_s": 139.946,
+      "drive": null,
+      "url": null
+    },
+    {
+      "id": "reaction-2026-10-26",
+      "title": "Meme Hop — reaction clip (Oct 26)",
+      "duration_s": 27.797,
+      "drive": "https://drive.google.com/file/d/1XnOEdSOZ6GjbxgyZquFrPyHI41DzcqDX/view",
+      "url": null
+    },
+    {
+      "id": "red-baron-meijer",
+      "title": "Meme Hop — Red Baron / Meijer clip",
+      "duration_s": 103.932,
+      "drive": "https://drive.google.com/file/d/1-9V1W-b-jwfx3K_XHT48EdBJT81pRx0f/view",
+      "url": null
+    }
+  ]
+}

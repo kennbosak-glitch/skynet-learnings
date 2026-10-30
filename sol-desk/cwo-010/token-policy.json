@@ -1,0 +1,38 @@
+{
+  "cluster": "mainnet-beta",
+  "concentration": {
+    "denominator_definition": "percent of total mint supply; adjusted view excludes only accounts labeled lp_pool, burn, or program_escrow WITH evidence (see liquidity evidence); raw view excludes nothing",
+    "max_snapshot_age_seconds": 3600,
+    "max_top10_pct": 30,
+    "max_top1_pct": 10
+  },
+  "failure_policy": "missing/invalid policy, unsupported token program or extension surface, RPC/indexer error, stale data, unidentified pool, or unverifiable lock/burn => FAIL or INDETERMINATE, never PASS",
+  "liquidity": {
+    "accepted_lock_or_burn_evidence_methods": [],
+    "accepted_pool_programs": [],
+    "minimum_lock_duration_seconds": null
+  },
+  "majors_allowlist": [
+    {
+      "basis": "native asset wrap",
+      "mint": "So11111111111111111111111111111111111111112",
+      "symbol": "SOL (wrapped)"
+    },
+    {
+      "basis": "Circle-issued major stablecoin; EXP-1 gate precedent",
+      "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "symbol": "USDC"
+    },
+    {
+      "basis": "Tether-issued major stablecoin",
+      "mint": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+      "symbol": "USDT"
+    }
+  ],
+  "note": "Concentration thresholds APPROVED by Kenn 2026-10-29 (balanced: max_top1_pct=10, max_top10_pct=30). Liquidity evidence methods + accepted pool programs remain null/empty (owner inputs still outstanding), so a non-major can still return INDETERMINATE on the liquidity leg; the gate never PASSes on missing data. Majors pass by identity (allowlist).",
+  "policy_version": "desk-token-policy/0.2",
+  "supported_token_programs": [
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+  ],
+  "token2022_supported": false
+}

@@ -4,22 +4,25 @@ Supplied by Skynet (coordination owner) so ChatEBT can independently verify the 
 
 - Project: `~/workspace/agent-wallet-sol` on Skynet's VM (TRADING-GROKBOT-SPEC.md lives in `~/workspace/grok-bots/`)
 - Verification re-run: 2026-10-30T22:04Z (18:04 ET), fresh, for this bundle. An earlier capture from 2026-10-29T18:42Z exists in the project (`evidence-cwo-010/RAW-OUTPUTS-2026-10-29.txt`) and agrees except where noted in section 2.
+- **Update 2026-10-31 (persistence run, Debt A closed):** the `thresholds-missing` fixture mismatch documented in section 2 is FIXED. The fixture now runs against a thresholds-absent copy of the policy (`THRESHOLDS_ABSENT_POLICY` in token-gate.mjs — the live policy's concentration thresholds are nulled in the copy only; the live `token-policy.json` was never edited to make a test pass). Full gate suite re-run 2026-10-31T14:53Z: **8/8 fixtures MATCH, exit 0** (raw capture: `evidence-cwo-010/RAW-OUTPUTS-2026-10-31.txt` in the project). Fee fixtures re-run the same day: 13/13 PASS, unchanged.
 
 ## Files (sha256, as published)
 
 ```
 d765e8dbaec0d6af36d1436292371afc86b0979aee7200c728a72fc4fb92d48f  fees.mjs
 e550eaa95e47c0cea746fedbe500f6019faa20cf114000d41bdd6560ed91923f  swap.mjs
-58883e1bb585e757ab92260f7de5c7bd8d9ebf15fd0b4fb69ae24c2c247dd837  token-gate.mjs
+c6c2b787b3f467a19514ec49e6e37a48b17d3a531157d14c263abb57e52071c5  token-gate.mjs
 a1fabe608cd4abf8ac3c1855d6e29b02ac1d0ae3a7f25cda1dc0a0f42448908d  token-policy.json
 e512211742289d0c6c668051220ab9e1bba042d6ee54ddf8de3e01a6ba1a7d46  EXP-2-CARD-2026-10-29.md
 767888bcc905ef123871919753f52413b807b3a2360166cc96cab54bb97c71c5  TRADING-GROKBOT-SPEC.md
 ```
-(Code files are byte-identical to the 2026-10-29 capture. token-policy.json changed after that capture — Kenn's approved thresholds were written into it 2026-10-29 18:47 ET; see section 2.)
+
+(token-gate.mjs changed 2026-10-31 — fixture harness only, per the update note above; the gate evaluator logic is unchanged. The other code files are byte-identical to the 2026-10-29 capture. token-policy.json changed after that capture — Kenn's approved thresholds were written into it 2026-10-29 18:47 ET; see section 5.)
 
 ## 1. Fee cap — re-run output (13/13 PASS)
 
 Commands run: `node fees.mjs test`, then `node fees.mjs check 100000 600000` (the over-cap demonstration, section 3).
+
     $ node fees.mjs test
     PASS  missing fee -> verdict=FAIL (FEE_MISSING) fee=null
     PASS  'auto' fee -> verdict=FAIL (FEE_NOT_NUMERIC) fee=null
@@ -36,7 +39,7 @@ Commands run: `node fees.mjs test`, then `node fees.mjs check 100000 600000` (th
     PASS  build with fee unreported -> verdict=FAIL (BUILD_FEE_UNREPORTED)
     ALL FEE FIXTURES PASS
     exit=0
-    
+
     $ node fees.mjs check 100000 600000
     CU price (micro-lamports/CU): 100000
     requested CU limit:           600000
@@ -46,39 +49,41 @@ Commands run: `node fees.mjs test`, then `node fees.mjs check 100000 600000` (th
     estimated total fee:          65000
     verdict: FAIL (FEE_OVER_CAP) — priority fee 60000 lamports (price 100000 x limit 600000) exceeds cap 50000
     exit=1
-    
+
+## 2. Token gate — re-run output (8/8 as of 2026-10-31; the 2026-10-30 gap is closed)
+
+Commands run: `node token-gate.mjs --fixtures`, then `node token-gate.mjs --test`.
+
     $ node token-gate.mjs --fixtures
     safe-legacy
     mint-authority-active
     freeze-authority-active
     thresholds-missing
-
-## 2. Token gate — re-run output (7/8 today, one mismatch named and explained)
-
-Commands run: `node token-gate.mjs --fixtures`, then `node token-gate.mjs --test`.
     concentration-over
     lp-unproven-badge
     token2022-permanent-delegate
     token2022-unknown-extension
     exit=0
-    
-    $ node token-gate.mjs --test
+
+    $ node token-gate.mjs --test        (2026-10-31T14:53Z)
     PASS  fixture safe-legacy -> PASS (expected PASS)
     PASS  fixture mint-authority-active -> FAIL (expected FAIL)
     PASS  fixture freeze-authority-active -> FAIL (expected FAIL)
-    FAIL  fixture thresholds-missing -> FAIL (expected INDETERMINATE)
+    PASS  fixture thresholds-missing -> INDETERMINATE (expected INDETERMINATE)
     PASS  fixture concentration-over -> FAIL (expected FAIL)
     PASS  fixture lp-unproven-badge -> INDETERMINATE (expected INDETERMINATE)
     PASS  fixture token2022-permanent-delegate -> INDETERMINATE (expected INDETERMINATE)
     PASS  fixture token2022-unknown-extension -> INDETERMINATE (expected INDETERMINATE)
-    1 FIXTURE MISMATCH(ES)
-    exit=1
+    ALL GATE FIXTURES MATCH
+    exit=0
 
 The eight fixtures, by name: safe-legacy; mint-authority-active; freeze-authority-active; thresholds-missing; concentration-over; lp-unproven-badge; token2022-permanent-delegate; token2022-unknown-extension.
 
-THE GAP, stated plainly: fixture `thresholds-missing` returned FAIL today where INDETERMINATE was expected. Root cause, verified from source: that fixture evaluates against the LIVE policy loaded from token-policy.json. In the 2026-10-29 capture it MATCHED (INDETERMINATE) because the policy's concentration thresholds were not yet set. Kenn's approved thresholds (section 5) were written into token-policy.json at 18:47 ET that day — after the capture. Against today's policy, the fixture's evidence (top10 = 52%) breaches the filed 30% cap, so the gate returns FAIL on the concentration leg. The fixture's premise ("thresholds missing") is stale relative to the live policy; the gate's behavior is the stricter, fail-closed one. The fixture expectation needs updating to match the post-threshold policy — flagged here rather than silently re-run until it passed. The ChatEBT-named risk classes are covered: permanent delegate (token2022-permanent-delegate, INDETERMINATE as expected), unknown/undecodable Token-2022 extension (token2022-unknown-extension, INDETERMINATE as expected); missing policy fields are still reported by the gate (`policy_missing_fields` currently lists the two liquidity fields, which remain empty by owner decision).
+HISTORY OF THE GAP (2026-10-30, now closed): fixture `thresholds-missing` returned FAIL where INDETERMINATE was expected. Root cause, verified from source: that fixture evaluated against the LIVE policy loaded from token-policy.json. In the 2026-10-29 capture it MATCHED (INDETERMINATE) because the policy's concentration thresholds were not yet set. Kenn's approved thresholds (section 5) were written into token-policy.json at 18:47 ET that day — after the capture. Against the post-threshold policy, the fixture's evidence (top10 = 52%) breaches the filed 30% cap, so the gate returned FAIL on the concentration leg. The fixture's premise ("thresholds missing") was stale relative to the live policy; the gate's behavior was the stricter, fail-closed one.
 
-Single-fixture detail (`node token-gate.mjs --fixture thresholds-missing`, 2026-10-30): verdict FAIL; concentration check FAIL with thresholds {max_top1_pct: 10, max_top10_pct: 30}; reason "concentration over threshold: top1 7% (max 10%), top10 52% (max 30%)"; policy_missing_fields: ["liquidity.accepted_pool_programs", "liquidity.accepted_lock_or_burn_evidence_methods"].
+THE FIX (2026-10-31, persistence Debt A): the fixture harness now builds `THRESHOLDS_ABSENT_POLICY` — a copy of the live policy with only `concentration.max_top1_pct` / `max_top10_pct` set to null — and `thresholds-missing` runs against that copy. The live policy file was not edited. Single-fixture detail (`node token-gate.mjs --fixture thresholds-missing`, 2026-10-31): verdict INDETERMINATE; concentration check INDETERMINATE with thresholds {max_top1_pct: null, max_top10_pct: null}; reason "concentration thresholds not owner-approved (max_top1_pct/max_top10_pct missing) — cannot PASS"; policy_missing_fields: ["concentration.max_top1_pct", "concentration.max_top10_pct", "liquidity.accepted_pool_programs", "liquidity.accepted_lock_or_burn_evidence_methods"] (the two liquidity fields remain empty by owner decision; an LP evidence proposal is with Kenn as of 2026-10-31).
+
+The ChatEBT-named risk classes are covered: permanent delegate (token2022-permanent-delegate, INDETERMINATE as expected), unknown/undecodable Token-2022 extension (token2022-unknown-extension, INDETERMINATE as expected); missing policy fields are still reported by the gate.
 
 ## 3. Over-cap fee is rejected BEFORE transaction construction
 

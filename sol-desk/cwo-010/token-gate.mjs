@@ -210,11 +210,24 @@ const baseEvidence = {
   extensions: null,
   lp: { status: 'evidenced', detail: 'fixture: LP tokens burned, burn tx attested by accepted method' },
 };
+// Thresholds-absent copy of the LIVE policy, for the thresholds-missing
+// fixture ONLY. Kenn approved real concentration thresholds (top1 10% /
+// top10 30%) into token-policy.json on 2026-10-29, so the live policy no
+// longer satisfies this fixture's premise — running it against POLICY made
+// the concentration leg FAIL on real thresholds instead of resolving
+// INDETERMINATE on missing ones. This copy nulls ONLY the two thresholds;
+// every other field is inherited from the live policy as-is. The live
+// policy file is never edited to make a test pass.
+const THRESHOLDS_ABSENT_POLICY = {
+  ...POLICY,
+  policy_version: 'fixture-policy/THRESHOLDS-ABSENT-TEST-ONLY',
+  concentration: { ...POLICY.concentration, max_top1_pct: null, max_top10_pct: null },
+};
 const FIXTURES = {
   'safe-legacy': { policy: APPROVED_TEST_POLICY, evidence: baseEvidence, expect: 'PASS' },
   'mint-authority-active': { policy: APPROVED_TEST_POLICY, evidence: { ...baseEvidence, mintAuthority: 'AttackerMintAuth111111111111111111111111111' }, expect: 'FAIL' },
   'freeze-authority-active': { policy: APPROVED_TEST_POLICY, evidence: { ...baseEvidence, freezeAuthority: 'AttackerFreezeAuth1111111111111111111111111' }, expect: 'FAIL' },
-  'thresholds-missing': { policy: POLICY, evidence: baseEvidence, expect: 'INDETERMINATE' },
+  'thresholds-missing': { policy: THRESHOLDS_ABSENT_POLICY, evidence: baseEvidence, expect: 'INDETERMINATE' },
   'concentration-over': { policy: APPROVED_TEST_POLICY, evidence: { ...baseEvidence, largest: [{ address: 'whale', amount: '400000000' }, ...baseEvidence.largest.slice(1)] }, expect: 'FAIL' },
   'lp-unproven-badge': { policy: APPROVED_TEST_POLICY, evidence: { ...baseEvidence, lp: { status: 'unproven', detail: 'project website shows an LP LOCKED badge; no on-chain attestation' } }, expect: 'INDETERMINATE' },
   'token2022-permanent-delegate': { policy: APPROVED_TEST_POLICY, evidence: { ...baseEvidence, programId: TOKEN_2022_PROGRAM, extensions: ['permanentDelegate'] }, expect: 'INDETERMINATE' },
